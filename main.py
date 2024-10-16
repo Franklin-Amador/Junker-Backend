@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from routes import personas_routes
 
 app = FastAPI()
 
@@ -21,3 +21,5 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return{ "message":"GG" }
+
+app.include_router(personas_routes.router)
