@@ -1,6 +1,7 @@
-fastapi
-uvicorn
-supabase
-python-dotenv
-PyJWT
-pytest
+fastapi == 0.115.2
+uvicorn ==  0.32.0 
+supabase == 2.9.0
+python-dotenv == 1.0.1
+PyJWT == 2.9.0
+pytest == 8.3.3
+yagmail == 0.15.293
