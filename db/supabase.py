@@ -3,9 +3,6 @@ from supabase import Client, create_client
 from typing import Any
 import logging
 
-# def get_supabase_client() -> Client:
-#     return create_client(SUPABASE_URL, SUPABASE_KEY)
-
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

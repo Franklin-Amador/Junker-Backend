@@ -7,7 +7,7 @@ router = APIRouter()
 async def get_personas():
     try:
         # Hacer un select de todos los registros en la tabla personas
-        response = supabase_manager.client.from_("personas").select("*").execute()
+        response = supabase_manager.client.from_("usuarios").select("*").execute()
         return response.data
     except Exception as e:
         return {"error": str(e)}
