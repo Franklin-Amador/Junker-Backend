@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from db.supabase import supabase_manager 
 from models.user import UserCreate, UserLogin, PasswordReset
-from utils import send_mail
+
 
 router = APIRouter()
 
