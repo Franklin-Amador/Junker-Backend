@@ -1,23 +1,23 @@
 from fastapi import APIRouter, HTTPException
 from db.supabase import supabase_manager 
-from models.user import UserCreate, UserLogin
+from models.user import UserCreate, UserLogin, PasswordReset
+from utils import send_mail
 
 router = APIRouter()
 
 @router.post("/register")
 async def register(user: UserCreate):
     try:
-        # Intentar registrar al usuario
+        # ? Registrarse en Supabase
         response = supabase_manager.sign_up(user.email, user.password)
 
-        # Verificar si el registro fue exitoso
-        if response.user:  # Si hay un usuario registrado
-            # Obtener el id del usuario registrado
-            user_id = response.user.id  # Asegúrate de que esto es correcto
+        # ? verificar si el usuario se registró correctamente 
+        if response.user: 
+            user_id = response.user.id
 
-            # Guardar la información adicional en Supabase
+            # * Guardar datos en la tabla de usuarios
             user_data = {
-                "id": user_id,  # Usar el mismo id en la tabla usuarios
+                "id": user_id,  
                 "nombre": user.nombre,
                 "apellido": user.apellido,
                 "telefono": user.telefono,
@@ -27,7 +27,7 @@ async def register(user: UserCreate):
                 "fecha_nacimiento": user.fecha_nacimiento
             }
 
-            # Insertar los datos en la tabla 'usuarios' en Supabase
+            # * Insertar datos en la tabla de usuarios
             supabase_manager.client.from_("usuarios").insert(user_data).execute()  # Asegúrate de que este método sea correcto
 
             return {"message": "User registered successfully", "user": response.user}
@@ -46,3 +46,4 @@ async def login(user: UserLogin):
         return {"access_token": response.session.access_token, "token_type": "bearer"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    

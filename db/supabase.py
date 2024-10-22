@@ -3,7 +3,7 @@ from supabase import Client, create_client
 from typing import Any
 import logging
 
-# Configurar logging
+# * Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,12 @@ class SupabaseManager:
 
     def sign_in(self, email: str, password: str) -> Any:
         return self.client.auth.sign_in_with_password({"email": email, "password": password})
+
+    def sign_out(self, token: str) -> Any:
+        return self.client.auth.sign_out(token)
+    
+    def reset_password_for_email(self, email: str) -> Any:
+        return self.client.auth.reset_password_email(email)
 
 
 try:

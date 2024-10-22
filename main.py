@@ -4,15 +4,10 @@ from routes import personas_routes, auth_routes
 
 app = FastAPI()
 
-# Configuración de CORS para permitir que el frontend acceda al backend
-origins = [
-    "http://localhost:3000",  # Añadir el dominio del frontend (en este caso Next.js)
-    "https://your-frontend-domain.com"
-]
-
+# * para permitir cualquier origen 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,5 +17,6 @@ app.add_middleware(
 async def root():
     return{ "message":"GG" }
 
+# * inclusion de las rutas
 app.include_router(personas_routes.router)
 app.include_router(auth_routes.router, prefix="/auth", tags=["auth"])
