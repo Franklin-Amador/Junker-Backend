@@ -17,3 +17,7 @@ class UserLogin(BaseModel):
     
 class PasswordReset(BaseModel):
     email: EmailStr
+    
+class Logout(BaseModel):
+    access_token: str
+    refresh_token: str
