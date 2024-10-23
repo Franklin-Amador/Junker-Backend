@@ -1,23 +1,22 @@
 from fastapi import APIRouter, HTTPException
 from db.supabase import supabase_manager 
-from models.user import UserCreate, UserLogin
+from models.user import UserCreate, UserLogin, PasswordReset, Logout
 
 router = APIRouter()
 
 @router.post("/register")
 async def register(user: UserCreate):
     try:
-        # Intentar registrar al usuario
+        # ? Registrarse en Supabase
         response = supabase_manager.sign_up(user.email, user.password)
 
-        # Verificar si el registro fue exitoso
-        if response.user:  # Si hay un usuario registrado
-            # Obtener el id del usuario registrado
-            user_id = response.user.id  # Asegúrate de que esto es correcto
+        # ? verificar si el usuario se registró correctamente 
+        if response.user: 
+            user_id = response.user.id
 
-            # Guardar la información adicional en Supabase
+            # * Guardar datos en la tabla de usuarios
             user_data = {
-                "id": user_id,  # Usar el mismo id en la tabla usuarios
+                "id": user_id,  
                 "nombre": user.nombre,
                 "apellido": user.apellido,
                 "telefono": user.telefono,
@@ -27,8 +26,8 @@ async def register(user: UserCreate):
                 "fecha_nacimiento": user.fecha_nacimiento
             }
 
-            # Insertar los datos en la tabla 'usuarios' en Supabase
-            supabase_manager.client.from_("usuarios").insert(user_data).execute()  # Asegúrate de que este método sea correcto
+            # * Insertar datos en la tabla de usuarios
+            supabase_manager.client.from_("usuarios").insert(user_data).execute()
 
             return {"message": "User registered successfully", "user": response.user}
         
@@ -43,6 +42,19 @@ async def register(user: UserCreate):
 async def login(user: UserLogin):
     try:
         response = supabase_manager.sign_in(user.email, user.password)
-        return {"access_token": response.session.access_token, "token_type": "bearer"}
+        session = response.session
+        return {
+            "access_token": session.access_token,
+            "refresh_token": session.refresh_token
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@router.post("/logout")
+async def logout(tokens: Logout):
+    try:
+        response = supabase_manager.sign_out(tokens)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    

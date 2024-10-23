@@ -14,3 +14,10 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    
+class PasswordReset(BaseModel):
+    email: EmailStr
+    
+class Logout(BaseModel):
+    access_token: str
+    refresh_token: str

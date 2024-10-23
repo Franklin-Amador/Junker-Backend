@@ -4,8 +4,7 @@ from routes import personas_routes, auth_routes
 
 app = FastAPI()
 
-
-
+# * para permitir cualquier origen 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,5 +17,6 @@ app.add_middleware(
 async def root():
     return{ "message":"GG" }
 
+# * inclusion de las rutas
 app.include_router(personas_routes.router)
 app.include_router(auth_routes.router, prefix="/auth", tags=["auth"])
