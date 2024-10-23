@@ -7,3 +7,4 @@ pytest == 8.3.3
 yagmail == 0.15.293
 pyddantic[Email]
 requests==2.32.3
+
