@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from db.supabase import supabase_manager 
 from models.user import UserCreate, UserLogin, PasswordReset, Logout
 
+
 router = APIRouter()
 
 @router.post("/register")
