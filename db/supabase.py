@@ -17,6 +17,9 @@ class SupabaseManager:
         url: str = SUPABASE_URL
         key: str = SUPABASE_KEY
         self.client: Client = create_client(url, key)
+        
+    def getSession(self):
+        return self.client.auth.get_session()
 
     def sign_up(self, email: str, password: str) -> Any:
         return self.client.auth.sign_up({"email": email, "password": password})
