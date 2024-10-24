@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from db.supabase import supabase_manager 
-from models.user import UserCreate, UserLogin, PasswordReset, Logout
+from models.user import UserCreate, UserLogin, PasswordReset, Logout, TokenData
 
 router = APIRouter()
 
@@ -42,14 +42,18 @@ async def register(user: UserCreate):
 async def login(user: UserLogin):
     try:
         response = supabase_manager.sign_in(user.email, user.password)
+        usuario = response.user.id
         session = response.session
+        data = supabase_manager.client.from_('usuarios').select('*').match({"id":usuario}).execute()
         return {
             "access_token": session.access_token,
-            "refresh_token": session.refresh_token
+            "refresh_token": session.refresh_token,
+            "user": usuario,
+            "data": data
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
+  
 @router.post("/logout")
 async def logout(tokens: Logout):
     try:
@@ -57,4 +61,5 @@ async def logout(tokens: Logout):
         return response
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
     
