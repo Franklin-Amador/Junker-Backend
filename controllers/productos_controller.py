@@ -2,6 +2,14 @@ from fastapi import HTTPException
 from db.supabase import supabase_manager 
 from models.productos import ProductosCreate, ProductosUpdate, ProductosDelete
 
+# * Ver los productos
+def get_productos():
+    try:
+        productos = supabase_manager.client.from_("productos").select("*,categorias(nombre),productos_imagenes(url)").execute()
+        return productos.data
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 # * Crear un producto
 def create_producto(producto: ProductosCreate):
     try:
