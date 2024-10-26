@@ -29,7 +29,8 @@ class SupabaseManager:
             # * Establecemos la sesión del usuario
             self.client.auth.set_session(
                 access_token=tokens.access_token,
-                refresh_token=tokens.refresh_token
+                refresh_token=tokens.refresh_token,
+                
             )
 
             self.client.auth.sign_out()
@@ -40,6 +41,9 @@ class SupabaseManager:
 
     def reset_password_for_email(self, email: str) -> Any:
         return self.client.auth.reset_password_email(email)
+    
+    def get_user_info(self, user_id: str) -> Any:
+        return self.client.table('usuarios').select("nombre").eq("email", user_id).execute()
 
 
 

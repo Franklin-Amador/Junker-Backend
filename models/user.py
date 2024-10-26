@@ -21,3 +21,8 @@ class PasswordReset(BaseModel):
 class Logout(BaseModel):
     access_token: str
     refresh_token: str
+
+class TokenData(BaseModel):
+    access_token: str
+    refresh_token: str
+    user_info: dict  # Puedes ajustar esto según lo que necesites
