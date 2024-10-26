@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from db.supabase import supabase_manager 
-from controllers.categories import create_category, update_category, delete_category
+from controllers.categories_controller import create_category, update_category, delete_category
 from models.categories import CategoryCreate, CategoryUpdate, CategoryDelete
 
 router = APIRouter()
@@ -22,7 +22,7 @@ async def post_categories(category: CategoryCreate):
 async def patch_categories(category: CategoryUpdate):
     return update_category(category)
 
-@router.delete("/ctegories")
+@router.delete("/categories")
 async def delete_categories(category: CategoryDelete):
     return delete_category(category)
     

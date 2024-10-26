@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import personas_routes, auth_routes, categories_routes
+from routes import personas_routes, auth_routes, categories_routes, productos_routes
 
 app = FastAPI()
 
@@ -21,3 +21,4 @@ async def root():
 app.include_router(personas_routes.router, prefix="/personas")
 app.include_router(auth_routes.router, prefix="/auth", tags=["auth"])
 app.include_router(categories_routes.router, tags=["categories"])
+app.include_router(productos_routes.router, tags=["productos"])
