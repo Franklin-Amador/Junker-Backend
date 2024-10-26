@@ -7,7 +7,7 @@ app = FastAPI()
 # * para permitir cualquier origen 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -18,6 +18,6 @@ async def root():
     return{ "message":"GG" }
 
 # * inclusion de las rutas
-app.include_router(personas_routes.router)
+app.include_router(personas_routes.router, prefix="/personas")
 app.include_router(auth_routes.router, prefix="/auth", tags=["auth"])
 app.include_router(categories_routes.router, tags=["categories"])
