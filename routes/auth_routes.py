@@ -44,12 +44,13 @@ async def login(user: UserLogin):
         response = supabase_manager.sign_in(user.email, user.password)
         usuario = response.user.id
         session = response.session
-        data = supabase_manager.client.from_('usuarios').select('*').match({"id":usuario}).execute()
+        # data = supabase_manager.get_user_info(usuario)
+        data = supabase_manager.client.rpc('user_info', {'user_id': usuario}).execute()
         return {
             "access_token": session.access_token,
             "refresh_token": session.refresh_token,
             "user": usuario,
-            "data": data
+            "data": data.data
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
