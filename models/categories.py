@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 
 class CategoryCreate(BaseModel):
-    id: int
     nombre: str
     
 class CategoryUpdate(BaseModel):

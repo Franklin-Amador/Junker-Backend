@@ -7,7 +7,6 @@ def create_category(category: CategoryCreate):
     try:
         # * Insertar datos en la tabla de categorías
         data = {
-            "id": category.id,
             "nombre": category.nombre,
         }
         
