@@ -13,8 +13,8 @@ async def obtener_productos():
 async def post_productos(producto: ProductosCreate):
     return create_producto(producto)
 
-@router.patch("/productos")
-async def patch_productos(producto: ProductosUpdate):
+@router.put("/productos")
+async def put_productos(producto: ProductosUpdate):
     return update_producto(producto)
 
 @router.delete("/producto")
