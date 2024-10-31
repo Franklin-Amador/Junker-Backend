@@ -17,3 +17,6 @@ class ProductosUpdate(BaseModel):
     
 class ProductosDelete(BaseModel):
     id: str
+    
+class ProductoRead(BaseModel):
+    id: str
