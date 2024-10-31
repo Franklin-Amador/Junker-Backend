@@ -1,9 +1,24 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response, status
 from db.supabase import supabase_manager 
-from models.user import UserCreate, UserLogin, PasswordReset, Logout, TokenData
+from models.user import UserCreate, UserLogin, PasswordReset, Logout, NewPasswordRequest
+from controllers.password_controller import PasswordController
+from fastapi import Depends, HTTPException, status
+from pydantic import BaseModel
+from typing import Dict
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class PasswordResetRequest(BaseModel):
+    new_password: str
+    access_token: str
+    refresh_token: str
+  
 
 router = APIRouter()
+password_controller = PasswordController()
 
 @router.post("/register")
 async def register(user: UserCreate):
@@ -66,4 +81,22 @@ async def logout(tokens: Logout):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
+
+        
+    # ! Punto critico
+@router.post("/new-reset")
+async def new_pass(data: PasswordResetRequest) -> Dict[str, str]:
+    try:
+        # Paso 1: Establecer la sesión con los tokens
+        session = supabase_manager.get_session(data.access_token, data.refresh_token)
+        
+        # Paso 2: Actualizar la contraseña
+        result = supabase_manager.update_password(session, data.new_password)
+        
+        return {"message": "Password updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+
     

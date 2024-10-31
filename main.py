@@ -1,6 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from routes import personas_routes, auth_routes, categories_routes, productos_routes
+from models.user import MailSend
+from utils.sendmail import welcome_email
+
+
 
 app = FastAPI()
 
@@ -22,3 +26,13 @@ app.include_router(personas_routes.router, prefix="/personas")
 app.include_router(auth_routes.router, prefix="/auth", tags=["auth"])
 app.include_router(categories_routes.router, tags=["categories"])
 app.include_router(productos_routes.router, tags=["productos"])
+
+@app.post("/bienvenida")
+async def bienvenida(request: MailSend):
+    result = await welcome_email(request.email, request.password)
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["message"])
+    return result
+
+
+
