@@ -96,6 +96,15 @@ async def new_pass(data: PasswordResetRequest) -> Dict[str, str]:
         return {"message": "Password updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@router.post("/forgot")
+async def forgot(data: PasswordReset):
+    try:
+        mail = supabase_manager.reset_password(data.email)
+        
+        return {"message": "Correo de reestablecimiento enviado"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 
