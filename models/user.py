@@ -1,4 +1,3 @@
-from datetime import date
 from pydantic import BaseModel, field_validator
 from utils.globals import validate_sql_injection
 from typing import Optional
@@ -43,16 +42,7 @@ class Logout(BaseModel):
 class TokenData(BaseModel):
     access_token: str
     refresh_token: str
-
-class UserUpdate(BaseModel):
-    nombre: str
-    apellido: str
-    genero: Optional[str] = None
-    fecha_nacimiento: Optional[str] = None
-    email: str
-    telefono: Optional[str] = None
-    direccion: Optional[str] = None
-    avatar_url: Optional[str] = None
+    user_info: dict 
     
 class MailSend(BaseModel):
     email: str

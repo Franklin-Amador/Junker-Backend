@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from controllers.productos_controller import get_productos, create_producto, update_producto, delete_producto, get_UnProducto
 from models.productos import ProductosCreate, ProductosUpdate, ProductosDelete
 
