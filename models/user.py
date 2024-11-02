@@ -1,6 +1,9 @@
 from datetime import date
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from utils.globals import validate_sql_injection
 from typing import Optional
+from datetime import datetime
+import re
 
 class UserCreate(BaseModel):
     email: str
@@ -8,9 +11,27 @@ class UserCreate(BaseModel):
     nombre: str
     apellido: str
     
+    @field_validator('password')
+    def password_length(cls, v):
+        if not re.search("[0-9]", v):
+            raise ValueError('Password must contain at least one number')
+        if not re.search("[a-z]", v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not re.search("[A-Z]", v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if re.search(r'(012|123|234|345|456|567|678|789)', v):
+            raise ValueError('Password cannot contain a sequence of 3 consecutive numbers')
+        return v
+    
 class UserLogin(BaseModel):
     email: str
     password: str
+    
+    @field_validator('email')
+    def email_length(cls, v):
+        if validate_sql_injection(v):
+            raise ValueError('Invalid email')
+        return v
     
 class PasswordReset(BaseModel):
     email: str
@@ -22,7 +43,6 @@ class Logout(BaseModel):
 class TokenData(BaseModel):
     access_token: str
     refresh_token: str
-    user_info: dict
 
 class UserUpdate(BaseModel):
     nombre: str
@@ -33,3 +53,16 @@ class UserUpdate(BaseModel):
     telefono: Optional[str] = None
     direccion: Optional[str] = None
     avatar_url: Optional[str] = None
+    
+class MailSend(BaseModel):
+    email: str
+    
+class NewPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+class ResetToken(BaseModel):
+    email: str
+    token: str
+    created_at: datetime
+    expires_at: datetime
