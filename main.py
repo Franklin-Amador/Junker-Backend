@@ -1,10 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from routes import personas_routes, auth_routes, categories_routes, productos_routes
+from routes import usuarios_routes, auth_routes, categories_routes, productos_routes
 from models.user import MailSend
 from utils.sendmail import welcome_email
-
-
 
 app = FastAPI()
 
@@ -22,7 +20,7 @@ async def root():
     return{ "message":"GG" }
 
 # * inclusion de las rutas
-app.include_router(personas_routes.router, prefix="/personas")
+app.include_router(usuarios_routes.router, prefix="/usuarios")
 app.include_router(auth_routes.router, prefix="/auth", tags=["auth"])
 app.include_router(categories_routes.router, tags=["categories"])
 app.include_router(productos_routes.router, tags=["productos"])

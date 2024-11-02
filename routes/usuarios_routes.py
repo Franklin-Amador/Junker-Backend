@@ -1,7 +1,8 @@
 from config.config import SUPABASE_JWT_SECRET
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Depends, HTTPException, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from db.supabase import supabase_manager
+from controllers.usuarios_controller import actualizar_usuario, obtener_usuario
+from models.user import UserUpdate
 import jwt
 
 router = APIRouter()
@@ -27,16 +28,13 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error decodificando el token: {str(e)}")
 
-@router.get("/getUser/")
-async def get_personas(user: dict = Depends(verify_token)):
-    user_id = user.get('sub')  # Obtener el ID del usuario del token
-
-    if not user_id:
-        raise HTTPException(status_code=401, detail="ID de usuario no encontrado en el token")
-
-    response = supabase_manager.client.from_("usuarios").select("*").eq('id', user_id).single().execute()
+@router.get('/getUser')
+async def get_user(user: dict = Depends(verify_token)):
+    user_id = user.get('sub')
+    return obtener_usuario(user_id)
     
-    if not response.data:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    return response.data
+@router.put("/updateUser/{user_id}")
+async def update_user(user_id: str, user_data: UserUpdate, user: dict = Depends(verify_token)):
+    token_user_id = user.get('sub')
+    return actualizar_usuario(user_id, user_data, token_user_id)
