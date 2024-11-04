@@ -2,7 +2,7 @@ from config.config import SUPABASE_JWT_SECRET
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from db.supabase import supabase_manager 
-from models.user import UserUpdate
+from models.user import UserUpdate, UpdateEmail
 import jwt
 
 # Clave secreta JWT de Supabase
@@ -38,7 +38,9 @@ def obtener_usuario(user: dict = Depends(verify_token)):
 
     return response.data
 
-def actualizar_usuario(user_id: str, user_data: UserUpdate, token_user_id: str):
+def actualizar_usuario(user_id: str, user_data: UserUpdate, user: dict):
+    token_user_id = user.get('sub')
+    
      # Verificar que el ID del usuario en el token coincida con el ID que se está actualizando
     if token_user_id != user_id:
         raise HTTPException(status_code=403, detail="No tiene permiso para actualizar esta información")
@@ -52,17 +54,19 @@ def actualizar_usuario(user_id: str, user_data: UserUpdate, token_user_id: str):
     if not response_usuarios.data:
         raise HTTPException(status_code=500, detail="Error al actualizar la información del usuario")
 
-    # Si se actualizó el email, actualizar también en auth.users
-    # if user_data.email is not None:
-
-    #     response_auth = supabase_manager.client.auth.update_user({"email": user_data.email})
-        
-    #     print(response_auth)
-
-    #     if not response_auth:
-    #         raise HTTPException(status_code=500, detail="Error al actualizar la información en auth.users")
-
     return {"usuarios": response_usuarios.data[0]}
 
-def actualizar_correo(user_id: str, email: str, token_user_id: str):
-    return "Hola"
+def actualizar_correo(user_id: str, email: UpdateEmail, user: dict):
+    token_user_id = user.get('sub')
+    
+    if token_user_id != user_id:
+        raise HTTPException(status_code=403, detail="No tiene permiso para actualizar esta información")
+    
+    response = supabase_manager.client.auth.update_user({"email": email.email})
+    
+    print(response)
+    
+    if not response:
+        raise HTTPException(status_code=500, detail="Error al actualizar esta información")
+    
+    return response

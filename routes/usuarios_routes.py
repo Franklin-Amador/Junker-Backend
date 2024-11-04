@@ -10,10 +10,8 @@ async def get_user(user: dict = Depends(obtener_usuario)):
 
 @router.put("/updateUser/{user_id}")
 async def update_user(user_id: str, user_data: UserUpdate, user: dict = Depends(verify_token)):
-    token_user_id = user.get('sub')
-    return actualizar_usuario(user_id, user_data, token_user_id)
+    return actualizar_usuario(user_id, user_data, user)
 
 @router.put("/updateEmail/{user_id}")
 async def update_email(user_id: str, email: UpdateEmail, user: dict = Depends(verify_token)):
-    token_user_id = user.get('sub')
-    return actualizar_correo(user_id, email, token_user_id)
+    return actualizar_correo(user_id, email, user)
