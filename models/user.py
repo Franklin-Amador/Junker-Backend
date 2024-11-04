@@ -56,3 +56,15 @@ class ResetToken(BaseModel):
     token: str
     created_at: datetime
     expires_at: datetime
+    
+class UserUpdate(BaseModel):
+    nombre: str
+    apellido: str
+    genero: Optional[str] = None
+    fecha_nacimiento: Optional[str] = None
+    direccion: Optional[str] = None
+    avatar_url: Optional[str] = None
+    telefono: Optional[str] = None
+    
+class UpdateEmail(BaseModel):
+    email: str
