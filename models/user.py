@@ -13,13 +13,13 @@ class UserCreate(BaseModel):
     @field_validator('password')
     def password_length(cls, v):
         if not re.search("[0-9]", v):
-            raise ValueError('Password must contain at least one number')
+            raise ValueError('La contraseña debe contener al menos un número')
         if not re.search("[a-z]", v):
-            raise ValueError('Password must contain at least one lowercase letter')
+            raise ValueError('La contraseña debe contener al menos una letra')
         if not re.search("[A-Z]", v):
-            raise ValueError('Password must contain at least one uppercase letter')
+            raise ValueError('La contraseña debe contener al menos una letra mayuscula')
         if re.search(r'(012|123|234|345|456|567|678|789)', v):
-            raise ValueError('Password cannot contain a sequence of 3 consecutive numbers')
+            raise ValueError('La contraseña no puede contener una secuencia de 3 números consecutivos')
         return v
     
 class UserLogin(BaseModel):
