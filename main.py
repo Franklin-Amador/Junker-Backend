@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import personas_routes, auth_routes, categories_routes, productos_routes
+from routes import usuarios_routes, auth_routes, categories_routes, productos_routes
 from models.user import MailSend, UserCreate
 
 from utils.sendmail import welcome_email
