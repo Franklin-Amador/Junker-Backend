@@ -20,40 +20,41 @@ class PasswordResetRequest(BaseModel):
 router = APIRouter()
 password_controller = PasswordController()
 
-@router.post("/register")
+# @router.post("/register")
 async def register(user: UserCreate):
     try:
-        # ? Registrarse en Supabase
+        # Intento de registro en Supabase
         respuesta = supabase_manager.sign_up(user.email, user.password)
-
         response = supabase_manager.sign_in(user.email, user.password)
-      
-        # ? verificar si el usuario se registró correctamente 
+
+        # Verificar si el usuario se registró correctamente
         if respuesta.user: 
             user_id = respuesta.user.id
 
-            # * Guardar datos en la tabla de usuarios
+            # Guardar datos en la tabla de usuarios
             user_data = {
                 "id": user_id,  
                 "nombre": user.nombre,
                 "apellido": user.apellido,
                 "email": user.email,
-            
             }
-        
 
-            # * Insertar datos en la tabla de usuarios
+            # Insertar datos en la tabla de usuarios
             supabase_manager.client.from_("usuarios").insert(user_data).execute()
 
-            return {"message": "User registered successfully", "user": respuesta.user,
-                    "access_token": response.session.access_token,
-                "refresh_token": response.session.refresh_token}
+            return {
+                "message": "User registered successfully",
+                "user": respuesta.user,
+                "access_token": response.session.access_token,
+                "refresh_token": response.session.refresh_token
+            }
         
-        else:
-            raise HTTPException(status_code=400, detail="User registration failed")
+        # Si no se pudo registrar el usuario
+        raise HTTPException(status_code=400, detail="User registration failed")
     
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        # Capturar errores específicos de Supabase y devolverlos
+        raise HTTPException(status_code=400, detail=f"Supabase error: {str(e)}")
     
     
 @router.post("/login")

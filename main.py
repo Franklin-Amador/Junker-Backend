@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from routes import personas_routes, auth_routes, categories_routes, productos_routes
-from models.user import MailSend
+from models.user import MailSend, UserCreate
 from utils.sendmail import welcome_email
+from routes.auth_routes import register
 
 
 
@@ -33,6 +34,12 @@ async def bienvenida(request: MailSend):
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["message"])
     return result
+
+# * Endpoint registro
+@app.post("/auth/register")
+async def registro(user: UserCreate):
+   response =  await register(user)
+   return response     
 
 
 
