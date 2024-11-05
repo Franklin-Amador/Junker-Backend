@@ -17,38 +17,98 @@ def get_UnProducto(product_id: ProductoRead):
 def get_productos():
     try:
         productos = supabase_manager.client.from_("productos").select(
-            "*, productos_imagenes(url), productos_categorias(categorias (nombre)), vendedores(calificacion, descripcion, usuarios(nombre, apellido, email))").execute()
+            "*, productos_imagenes(url, orden), productos_categorias(categorias (nombre)), vendedores(calificacion, descripcion, usuarios(nombre, apellido, email))").eq("productos_imagenes.orden", 0).execute()
         return productos.data
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# * Crear un producto
+# # * Crear un producto
+# def create_producto(producto: ProductosCreate):
+#     try:
+#         data = {
+#             "nombre": producto.nombre,
+#             "descripcion": producto.descripcion,
+#             "precio": producto.precio,
+#             "estado_producto": producto.estado_producto,
+#             "id_vendedor": producto.id_vendedor,       
+#         }
+        
+#         producto_res = supabase_manager.client.from_("productos").insert(data).execute() 
+        
+#         if not producto_res.data:
+#             raise HTTPException(status_code=400, detail="Error al crear el producto")
+        
+#         producto_id = producto_res.data[0]["id"]
+        
+#         imagen_data = [
+#             {
+#                 "id_producto": producto_id,
+#                 "url": url,
+#                 "orden": index  # Para mantener el orden de las imágenes
+#             }
+#             for index, url in enumerate(producto.imagen_url)  # Iterar sobre cada URL
+#         ]
+        
+#         imagen_res = supabase_manager.client.from_("productos_imagenes").insert(imagen_data).execute()
+        
+#         if not imagen_res.data:
+#             raise HTTPException(status_code=400, detail="Error al crear la imagen del producto")
+        
+#         return {"message": "Producto creado correctamente"}
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+    
+    
+#     # * Crear un producto
 def create_producto(producto: ProductosCreate):
     try:
-        data = {
+        data_producto = {
             "nombre": producto.nombre,
             "descripcion": producto.descripcion,
             "precio": producto.precio,
-            "id_vendedor": producto.id_vendedor,       
+            "estado_producto": producto.estado_producto,
+            "id_vendedor": producto.id_vendedor,
+            "stock": producto.stock,       
         }
         
-        producto_res = supabase_manager.client.from_("productos").insert(data).execute() 
+        producto_res = supabase_manager.client.from_("productos").insert(data_producto).execute() 
+        
+        if not producto_res.data:
+            raise HTTPException(status_code=400, detail="Error al crear el producto")
         
         producto_id = producto_res.data[0]["id"]
         
-        imagen_data = {
-            "id_producto": producto_id,
-            "url": producto.imagen_url 
-        }
+        imagen_data = [
+            {
+                "id_producto": producto_id,
+                "url": url,
+                "orden": index  # Para mantener el orden de las imágenes
+            }
+            for index, url in enumerate(producto.imagen_url)  # Iterar sobre cada URL
+        ]
         
         imagen_res = supabase_manager.client.from_("productos_imagenes").insert(imagen_data).execute()
         
         if not imagen_res.data:
             raise HTTPException(status_code=400, detail="Error al crear la imagen del producto")
         
-        return {"message": "Producto creado correctamente"}
+        
+        Producto_categoria = [
+                {
+                "id_producto": producto_id,
+                "id_categoria": producto.id_categoria,
+                }
+        ]
+        
+        Producto_categoria_res = supabase_manager.client.from_("productos_categorias").insert(Producto_categoria).execute()
+        
+        if not Producto_categoria_res.data:
+            raise HTTPException(status_code=400, detail="Error al crear el producto y la categoria")
+        
+        return {"message": "Producto y categoría creados correctamente"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
     
 # * Actualizar productos
 def update_producto(producto: ProductosUpdate):
