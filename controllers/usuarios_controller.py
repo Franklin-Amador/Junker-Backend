@@ -70,3 +70,19 @@ def actualizar_correo(user_id: str, email: UpdateEmail, user: dict):
         raise HTTPException(status_code=500, detail="Error al actualizar esta información")
     
     return response
+
+# * clase para verificacion
+class AuthController:
+    @staticmethod
+    def verify_token(credentials: HTTPAuthorizationCredentials):
+        token = credentials.credentials
+        try:
+            # Decodificar el token JWT con la clave secreta
+            payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], audience=expected_audience)
+            return payload
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Token expirado")
+        except jwt.InvalidTokenError as e:
+            raise HTTPException(status_code=401, detail=f"Token inválido: {str(e)}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error decodificando el token: {str(e)}")
