@@ -3,18 +3,17 @@ from db.supabase import supabase_manager
 from models.categories import CategoryCreate, CategoryUpdate, CategoryDelete
 
 # * Crear categoría
-def create_category(category: CategoryCreate):
+async def create_category(category: CategoryCreate):
     try:
-        # * Insertar datos en la tabla de categorías
         data = {
-            "id": category.id,
             "nombre": category.nombre,
         }
         
-        supabase_manager.client.from_("categorias").insert(data).execute()  # Asegúrate de que este método sea correcto
-        return {"message": "Categgria creada correctamente"}
+        result = supabase_manager.client.from_("prueba2").insert(data).execute()
+        
+        return {"message": "Categoria creada correctamente", "data": result.data}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=f"Error al crear categoría: {str(e)}")
     
 # * Actualizar categoría
 def update_category(category: CategoryUpdate):

@@ -6,6 +6,7 @@ PyJWT == 2.9.0
 pytest == 8.3.3
 yagmail == 0.15.293
 requests==2.32.3
+cloudinary==1.41.0
 
 
 
