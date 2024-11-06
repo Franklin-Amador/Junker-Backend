@@ -4,10 +4,13 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from db.supabase import supabase_manager 
 from models.user import UserUpdate, UpdateEmail
 import jwt
+from datetime import datetime, timedelta
 
 # Clave secreta JWT de Supabase
 SUPABASE_JWT_SECRET = SUPABASE_JWT_SECRET
 expected_audience = "authenticated"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 # Middleware para obtener el token desde el header de la solicitud
 security = HTTPBearer()
@@ -86,3 +89,49 @@ class AuthController:
             raise HTTPException(status_code=401, detail=f"Token inválido: {str(e)}")
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error decodificando el token: {str(e)}")
+        
+    @staticmethod
+    def create_access_token(data: dict, expires_delta: timedelta = None):
+        to_encode = data.copy()
+        expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        to_encode.update({"exp": expire})
+        return jwt.encode(to_encode, SUPABASE_JWT_SECRET, algorithm=["HS256"])
+
+    @staticmethod
+    def create_refresh_token(data: dict):
+        expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        to_encode = data.copy()
+        to_encode.update({"exp": expire})
+        return jwt.encode(to_encode, SUPABASE_JWT_SECRET, algorithm=["HS256"])
+
+    @staticmethod
+    async def refresh_access_token_logic(refresh_token: str):
+        try:
+            # Decodificar y verificar el refresh token
+            payload = jwt.decode(refresh_token, SUPABASE_JWT_SECRET, algorithms=["HS256"])
+            user_id = payload.get("sub")
+            if user_id is None:
+                raise HTTPException(status_code=401, detail="Token inválido")
+            
+            # Verificar si el refresh token es válido en la base de datos de Supabase
+            response = supabase_manager.client.from_("user_tokens").select("refresh_token").eq("user_id", user_id).single().execute()
+            
+            if not response.data or response.data["refresh_token"] != refresh_token:
+                raise HTTPException(status_code=401, detail="Refresh token inválido o caducado")
+
+            # Generar un nuevo access token
+            new_access_token = AuthController.create_access_token({"sub": user_id})
+            new_refresh_token = AuthController.create_refresh_token({"sub": user_id})
+
+            # Actualizar el refresh token en la base de datos
+            supabase_manager.client.from_("user_tokens").update({"refresh_token": new_refresh_token}).eq("user_id", user_id).execute()
+
+            return {
+                "access_token": new_access_token,
+                "refresh_token": new_refresh_token
+            }
+
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Refresh token expirado")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Token inválido")

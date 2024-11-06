@@ -12,13 +12,23 @@ def get_UnProducto(product_id: ProductoRead):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+# * Ver los productos testeo
 
-# * Ver los productos
-def get_productos():
+def get_productos(offset: int, limit: int):
     try:
         productos = supabase_manager.client.from_("productos").select(
-            "*, productos_imagenes(url, orden), productos_categorias(categorias (nombre)), vendedores(calificacion, descripcion, usuarios(nombre, apellido, email))").eq("productos_imagenes.orden", 0).execute()
+            "*, productos_imagenes(url, orden), productos_categorias(categorias (nombre)), vendedores(calificacion, descripcion, usuarios(nombre, apellido, email))"
+        ).eq("productos_imagenes.orden", 0) \
+         .range(offset, offset + limit - 1).execute()
         return productos.data
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+def count_productos():
+    try:
+        count_result = supabase_manager.client.from_("productos").select("id", count="exact").execute()  # Contar todos los productos
+        return count_result.count  # Regresar el total de productos
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
