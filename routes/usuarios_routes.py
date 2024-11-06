@@ -27,3 +27,8 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
         "user": payload.get("sub"),
         "exp": payload.get("exp")
     }
+    
+@router.post("/auth/refresh")
+async def refresh_access_token(refresh_token: str):
+    tokens = await AuthController.refresh_access_token_logic(refresh_token)
+    return tokens
