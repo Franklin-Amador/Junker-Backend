@@ -7,13 +7,14 @@ from typing import Optional
 
 router = APIRouter()
 
-# * Endpoint de get paginado
+# * Endpoint de get paginado con filtro de categoría v1
 @router.get("/productos")
-async def obtener_productos(page: int = 1, limit: int = 16):
+async def obtener_productos(page: int = 1, limit: int = 16, categoria: str = None):
     offset = (page - 1) * limit  # Calcular el desplazamiento
-    productos = get_productos(offset, limit)
+    productos = get_productos(offset, limit, categoria)  # Pasar categoria
     total = count_productos()  # Contar el total de productos
     return {"items": productos, "total": total}
+
 
 
 @router.get("/productos/{product_id}")

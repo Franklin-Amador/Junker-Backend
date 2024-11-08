@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from db.supabase import supabase_manager 
 from models.productos import ProductosCreate, ProductosUpdate, ProductosDelete, ProductoRead
+from typing import Optional
 
 # * Ver un producto
 def get_UnProducto(product_id: ProductoRead):
@@ -12,17 +13,31 @@ def get_UnProducto(product_id: ProductoRead):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# * Ver los productos testeo
-
-def get_productos(offset: int, limit: int):
+# * Ver los productos testeo v1     
+def get_productos(offset: int, limit: int, categoria: str = None):
     try:
-        productos = supabase_manager.client.from_("productos").select(
+        # Iniciamos la consulta base para los productos
+        query = supabase_manager.client.from_("productos").select(
             "*, productos_imagenes(url, orden), productos_categorias(categorias (nombre)), vendedores(calificacion, descripcion, usuarios(nombre, apellido, email))"
         ).eq("productos_imagenes.orden", 0) \
-         .range(offset, offset + limit - 1).execute()
+         .range(offset, offset + limit - 1)
+        
+        # Si se especifica una categoría, aplicar el filtro
+        if categoria:
+            query = query.eq("productos_categorias.categorias.nombre", categoria)  # Asegúrate de usar eq correctamente
+
+        # Ejecutar la consulta
+        productos = query.execute()
+
+        # Retornar los productos obtenidos
         return productos.data
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+
+
+
 
 
 def count_productos():
