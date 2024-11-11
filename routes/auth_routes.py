@@ -94,7 +94,7 @@ async def new_pass(data: PasswordResetRequest) -> Dict[str, str]:
         # Paso 2: Actualizar la contraseña
         result = supabase_manager.update_password(session, data.new_password)
         
-        return {"message": "Password updated successfully"}
+        return {"message": "Contraseña actualizada! Seras redirigido en 3 segundos..."}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     

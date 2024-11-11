@@ -44,12 +44,16 @@ def obtener_usuario(user: dict = Depends(verify_token)):
 def actualizar_usuario(user_id: str, user_data: UserUpdate, user: dict):
     token_user_id = user.get('sub')
     
-     # Verificar que el ID del usuario en el token coincida con el ID que se está actualizando
+    # Verificar que el ID del usuario en el token coincida con el ID que se está actualizando
     if token_user_id != user_id:
         raise HTTPException(status_code=403, detail="No tiene permiso para actualizar esta información")
 
     # Crear un diccionario de datos a actualizar excluyendo los valores no establecidos
     user_data_dict = user_data.model_dump(exclude_unset=True)
+
+    # Si 'fecha_nacimiento' está en el diccionario pero es una cadena vacía, cámbialo a None o elimínalo
+    if user_data_dict.get("fecha_nacimiento") == "":
+        user_data_dict["fecha_nacimiento"] = None  # O usa `del user_data_dict["fecha_nacimiento"]` para eliminarlo
 
     # Realizar la actualización en la tabla "usuarios"
     response_usuarios = supabase_manager.client.from_("usuarios").update(user_data_dict).eq('id', user_id).execute()
@@ -58,6 +62,7 @@ def actualizar_usuario(user_id: str, user_data: UserUpdate, user: dict):
         raise HTTPException(status_code=500, detail="Error al actualizar la información del usuario")
 
     return {"usuarios": response_usuarios.data[0]}
+
 
 def actualizar_correo(user_id: str, email: UpdateEmail, user: dict):
     token_user_id = user.get('sub')
