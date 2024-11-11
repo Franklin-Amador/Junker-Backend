@@ -103,7 +103,7 @@ async def forgot(data: PasswordReset):
     try:
         mail = supabase_manager.reset_password(data.email)
         
-        return {"message": "Correo de reestablecimiento enviado"}
+        return {"message": "Correo de restablecimiento enviado!"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

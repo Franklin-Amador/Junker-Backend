@@ -65,14 +65,11 @@ def actualizar_correo(user_id: str, email: UpdateEmail, user: dict):
     if token_user_id != user_id:
         raise HTTPException(status_code=403, detail="No tiene permiso para actualizar esta información")
     
-    response = supabase_manager.client.auth.update_user({"email": email.email})
-    
-    print(response)
-    
-    if not response:
-        raise HTTPException(status_code=500, detail="Error al actualizar esta información")
-    
-    return response
+    try:
+        response = supabase_manager.client.auth.update_user({"email": email.email})
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # * clase para verificacion
 class AuthController:
