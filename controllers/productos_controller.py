@@ -47,42 +47,6 @@ def count_productos():
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# # * Crear un producto
-# def create_producto(producto: ProductosCreate):
-#     try:
-#         data = {
-#             "nombre": producto.nombre,
-#             "descripcion": producto.descripcion,
-#             "precio": producto.precio,
-#             "estado_producto": producto.estado_producto,
-#             "id_vendedor": producto.id_vendedor,       
-#         }
-        
-#         producto_res = supabase_manager.client.from_("productos").insert(data).execute() 
-        
-#         if not producto_res.data:
-#             raise HTTPException(status_code=400, detail="Error al crear el producto")
-        
-#         producto_id = producto_res.data[0]["id"]
-        
-#         imagen_data = [
-#             {
-#                 "id_producto": producto_id,
-#                 "url": url,
-#                 "orden": index  # Para mantener el orden de las imágenes
-#             }
-#             for index, url in enumerate(producto.imagen_url)  # Iterar sobre cada URL
-#         ]
-        
-#         imagen_res = supabase_manager.client.from_("productos_imagenes").insert(imagen_data).execute()
-        
-#         if not imagen_res.data:
-#             raise HTTPException(status_code=400, detail="Error al crear la imagen del producto")
-        
-#         return {"message": "Producto creado correctamente"}
-#     except Exception as e:
-#         raise HTTPException(status_code=400, detail=str(e))
-    
     
 #     # * Crear un producto
 def create_producto(producto: ProductosCreate):
