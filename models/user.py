@@ -68,3 +68,6 @@ class UserUpdate(BaseModel):
     
 class UpdateEmail(BaseModel):
     email: str
+    
+class UpdateDescripcion(BaseModel):
+    descripcion: str
