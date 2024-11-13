@@ -36,10 +36,6 @@ def get_productos(offset: int, limit: int, categoria: str = None):
 
 
 
-
-
-
-
 def count_productos():
     try:
         count_result = supabase_manager.client.from_("productos").select("id", count="exact").execute()  # Contar todos los productos

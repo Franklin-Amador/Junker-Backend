@@ -35,7 +35,7 @@ def obtener_usuario(user: dict = Depends(verify_token)):
     if not user_id:
         raise HTTPException(status_code=401, detail="ID de usuario no encontrado")
     
-    response = supabase_manager.client.from_("usuarios").select("*").eq('id', user_id).single().execute()
+    response = supabase_manager.client.from_("usuarios").select("*, vendedores(id), carrito(id)").eq('id', user_id).single().execute()
     if not response.data:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
