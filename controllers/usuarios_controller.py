@@ -2,7 +2,7 @@ from config.config import SUPABASE_JWT_SECRET
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from db.supabase import supabase_manager 
-from models.user import UserUpdate, UpdateEmail
+from models.user import UserUpdate, UpdateEmail, UpdateDescripcion
 import jwt
 from datetime import datetime, timedelta
 
@@ -35,7 +35,7 @@ def obtener_usuario(user: dict = Depends(verify_token)):
     if not user_id:
         raise HTTPException(status_code=401, detail="ID de usuario no encontrado")
     
-    response = supabase_manager.client.from_("usuarios").select("*, vendedores(id), carrito(id)").eq('id', user_id).single().execute()
+    response = supabase_manager.client.from_("usuarios").select("*, vendedores(id, descripcion), carrito(id)").eq('id', user_id).single().execute()
     if not response.data:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -75,6 +75,22 @@ def actualizar_correo(user_id: str, email: UpdateEmail, user: dict):
         return response
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+def actualizar_desc(user_id: str, descripcion: UpdateDescripcion, user: dict):
+    try:
+        response = supabase_manager.client.from_('vendedores').update({
+            'descripcion': descripcion.descripcion
+        }).eq('id', user_id).execute()
+
+        print(response)
+        # Verifica si la actualización fue exitosa
+        if response.status_code == 200:
+            return {"success": True, "message": "Descripción actualizada correctamente"}
+        else:
+            return {"success": False, "message": "Error al actualizar la descripción"}
+    
+    except Exception as e:
+        return {"success": False, "message": str(e)}
 
 # * clase para verificacion
 class AuthController:
