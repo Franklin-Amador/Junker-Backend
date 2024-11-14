@@ -71,3 +71,7 @@ class UpdateEmail(BaseModel):
     
 class UpdateDescripcion(BaseModel):
     descripcion: str
+    
+class UpdatePassword(BaseModel):
+    password: str
+    newPassword: str

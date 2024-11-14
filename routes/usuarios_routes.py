@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from controllers.usuarios_controller import actualizar_correo, actualizar_usuario, obtener_usuario, verify_token, AuthController, actualizar_desc
-from models.user import UserUpdate, UpdateEmail, UpdateDescripcion
+from controllers.usuarios_controller import actualizar_correo, actualizar_usuario, obtener_usuario, verify_token, AuthController, actualizar_desc, verificar_contra
+from models.user import UserUpdate, UpdateEmail, UpdateDescripcion, UpdatePassword
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from typing import Dict
 
@@ -21,7 +21,11 @@ async def update_email(user_id: str, email: UpdateEmail, user: dict = Depends(ve
 
 @router.put("/updateDescripcion/{user_id}")
 async def update_desc(user_id: str, descripcion: UpdateDescripcion, user: dict = Depends(verify_token)):
-    return actualizar_desc(user_id, descripcion, user)
+    return actualizar_desc(user_id, descripcion)
+
+@router.post('/verifyPassword/{user_id}')
+async def verify_pass(user_id: str, password: UpdatePassword, user: dict = Depends(verify_token)):
+    return verificar_contra(user_id, password, user)
 
 @router.get("/verify", response_model=Dict)
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
