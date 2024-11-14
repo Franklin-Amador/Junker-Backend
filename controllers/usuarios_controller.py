@@ -2,7 +2,7 @@ from config.config import SUPABASE_JWT_SECRET
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from db.supabase import supabase_manager 
-from models.user import UserUpdate, UpdateEmail, UpdateDescripcion
+from models.user import UserUpdate, UpdateEmail, UpdateDescripcion, UpdatePassword
 import jwt
 from datetime import datetime, timedelta
 
@@ -76,13 +76,12 @@ def actualizar_correo(user_id: str, email: UpdateEmail, user: dict):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-def actualizar_desc(user_id: str, descripcion: UpdateDescripcion, user: dict):
+def actualizar_desc(user_id: str, descripcion: UpdateDescripcion):
     try:
         response = supabase_manager.client.from_('vendedores').update({
             'descripcion': descripcion.descripcion
         }).eq('id', user_id).execute()
 
-        print(response)
         # Verifica si la actualización fue exitosa
         if response.status_code == 200:
             return {"success": True, "message": "Descripción actualizada correctamente"}
@@ -91,6 +90,38 @@ def actualizar_desc(user_id: str, descripcion: UpdateDescripcion, user: dict):
     
     except Exception as e:
         return {"success": False, "message": str(e)}
+
+def verificar_contra(user_id: str, password: UpdatePassword, user: dict):
+    token_user_id = user.get('sub')
+    
+    # Check if the user is authorized to change the password
+    if token_user_id != user_id:
+        raise HTTPException(status_code=403, detail="No tiene permiso para actualizar esta información")
+    
+    try:
+        # Execute the RPC call to verify the user's current password
+        response = supabase_manager.client.rpc("verify_user_password", {
+            "user_id": user_id,
+            "password": password.password
+        }).execute()
+
+        if response.data:
+            update_response = supabase_manager.client.auth.update_user({
+                "password": password.newPassword
+            })
+            
+            if not update_response:
+                raise HTTPException(status_code=400, detail="Error al actualizar la contraseña.")
+            else:
+                return {"message": "Contraseña actualizada correctamente."}
+        else:
+            # If the password verification failed
+            raise HTTPException(status_code=401, detail="Contraseña actual incorrecta.")
+    
+    except Exception as e:
+        # Return the exception message if an error occurs
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # * clase para verificacion
 class AuthController:
