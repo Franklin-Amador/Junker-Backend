@@ -24,24 +24,21 @@ def get_carrito():
         raise HTTPException(status_code=400, detail=str(e))
 
     
-# * Crear un producto
+# * Agregar al carrito
 def create_carrito(carrito: CarritoCreate):
     try:
         data_carrito = {
-            "nombre": carrito.nombre,
-            "descripcion": carrito.descripcion,
-            "precio": carrito.precio,
-            "estado_carrito": carrito.estado_carrito,
-            "id_vendedor": carrito.id_vendedor,
-            "stock": carrito.stock,       
+            "id_carrito": carrito.id_carrito,
+            "id_producto": carrito.id_producto,
+            "cantidad": carrito.cantidad,     
         }
         
-        carrito_res = supabase_manager.client.from_("carritos").insert(data_carrito).execute() 
+        carrito_res = supabase_manager.client.from_("carrito_productos").insert(data_carrito).execute() 
         
         if not carrito_res.data:
             raise HTTPException(status_code=400, detail="Error al crear el carrito")        
         
-        return {"message": "carrito creados correctamente"}
+        return {"message": "carrito creado correctamente"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
@@ -50,10 +47,9 @@ def create_carrito(carrito: CarritoCreate):
 def update_carrito(carrito: CarritoUpdate):
     try:
         data = {
-            "nombre": carrito.nombre,
-            "descripcion": carrito.descripcion,
-            "precio": carrito.precio,
-            "id_vendedor": carrito.id_vendedor,
+            "id_carrito": carrito.id_carrito,
+            "id_producto": carrito.id_producto,
+            "cantidad": carrito.cantidad,
         }
         
         carrito_update = supabase_manager.client.from_("carrito_productos").update(data).eq("id",carrito.id).execute()
