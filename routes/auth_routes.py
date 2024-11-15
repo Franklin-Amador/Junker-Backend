@@ -20,37 +20,18 @@ class PasswordResetRequest(BaseModel):
 router = APIRouter()
 password_controller = PasswordController()
 
-# @router.post("/register")
+@router.post("/register")
 async def register(user: UserCreate):
+    user_dict = user.model_dump()
     try:
-        # Intento de registro en Supabase
-        respuesta = supabase_manager.sign_up(user.email, user.password)
-        response = supabase_manager.sign_in(user.email, user.password)
-
-        # Verificar si el usuario se registró correctamente
-        if respuesta.user: 
-            user_id = respuesta.user.id
-
-            # Guardar datos en la tabla de usuarios
-            user_data = {
-                "id": user_id,  
-                "nombre": user.nombre,
-                "apellido": user.apellido,
-                "email": user.email,
-            }
-
-            # Insertar datos en la tabla de usuarios
-            supabase_manager.client.from_("usuarios").insert(user_data).execute()
-
-            return {
-                "message": "User registered successfully",
-                "user": respuesta.user,
-                "access_token": response.session.access_token,
-                "refresh_token": response.session.refresh_token
-            }
+        res = supabase_manager.client.from_("usuarios").insert(user_dict).execute()
         
-        # Si no se pudo registrar el usuario
-        raise HTTPException(status_code=400, detail="User registration failed")
+        print(res)
+        
+        if not res:
+            raise HTTPException(status_code=400, detail="User registration failed")
+        
+        return res
     
     except Exception as e:
         # Capturar errores específicos de Supabase y devolverlos
