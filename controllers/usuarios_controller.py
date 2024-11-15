@@ -29,8 +29,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error decodificando el token: {str(e)}")
 
-def obtener_usuario(user: dict = Depends(verify_token)):
-    user_id = user.get('sub')
+def obtener_usuario(user_id: str):
 
     if not user_id:
         raise HTTPException(status_code=401, detail="ID de usuario no encontrado")
@@ -69,9 +68,12 @@ def actualizar_correo(user_id: str, email: UpdateEmail, user: dict):
     
     if token_user_id != user_id:
         raise HTTPException(status_code=403, detail="No tiene permiso para actualizar esta información")
-    
     try:
-        response = supabase_manager.client.auth.update_user({"email": email.email})
+        response = supabase_manager.client.rpc("actualizar_email_usuario", {
+            "user_id": user_id,
+            "new_email": email.email
+        }).execute()
+        
         return response
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -106,9 +108,10 @@ def verificar_contra(user_id: str, password: UpdatePassword, user: dict):
         }).execute()
 
         if response.data:
-            update_response = supabase_manager.client.auth.update_user({
-                "password": password.newPassword
-            })
+            update_response = supabase_manager.client.rpc("actualizar_contraseña_usuario", {
+                "user_id": user_id,
+                "nueva_contraseña": password.newPassword
+            }).execute()
             
             if not update_response:
                 raise HTTPException(status_code=400, detail="Error al actualizar la contraseña.")
