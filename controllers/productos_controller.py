@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from db.supabase import supabase_manager 
-from models.productos import ProductosCreate, ProductosUpdate, ProductosDelete, ProductoRead
-from typing import Optional
+from models.productos import ProductosCreate, ProductosUpdate, ProductosDelete, ProductoRead, ProductFilter
+from typing import Optional, List, Dict, Any
 
 # * Ver un producto
 def get_UnProducto(product_id: ProductoRead):
@@ -14,34 +14,124 @@ def get_UnProducto(product_id: ProductoRead):
         raise HTTPException(status_code=400, detail=str(e))
 
 # * Ver los productos testeo v1     
-def get_productos(offset: int, limit: int, categoria: str = None):
-    try:
-        # Iniciamos la consulta base para los productos
-        query = supabase_manager.client.from_("productos").select(
-            "*, productos_imagenes(url, orden), productos_categorias(categorias (nombre)), vendedores(calificacion, descripcion, usuarios(nombre, apellido, email))"
-        ).eq("productos_imagenes.orden", 0) \
-         .range(offset, offset + limit - 1)
-        
-        # Si se especifica una categoría, aplicar el filtro
-        if categoria:
-            query = query.eq("productos_categorias.categorias.nombre", categoria)  # Asegúrate de usar eq correctamente
+# ! Version test
+class ProductQuery:
+    """Clase para manejar las consultas de productos"""
+    BASE_SELECT = """
+        id, precio, nombre, estado_producto
+    """
 
-        # Ejecutar la consulta
-        productos = query.execute()
+    @staticmethod
+    async def get_filtered_product_ids(categoria: str) -> List[int]:
+        """Obtiene los IDs de productos filtrados por categoría"""
+        try:
+            # Subconsulta para obtener id_producto usando una relación directa con id_categoria
+            subquery = supabase_manager.client.from_("productos_categorias")\
+                .select("id_producto, categorias!inner(nombre)")\
+                .eq("categorias.nombre", categoria)
+            
+            result = subquery.execute()
 
-        # Retornar los productos obtenidos
-        return productos.data
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+            # Devolver solo IDs de productos si hay coincidencias
+            return [item['id_producto'] for item in result.data] if result.data else []
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
+    @classmethod
+    async def get_productos(
+        cls,
+        offset: int,
+        limit: int,
+        filters: ProductFilter
+    ) -> List[Dict[Any, Any]]:
+        """Obtiene productos con filtros aplicados"""
+        try:
+            # Crear consulta base en productos (solo los campos necesarios)
+            query = supabase_manager.client.from_("productos")\
+                .select(cls.BASE_SELECT)
 
+            # Aplicar filtro por categoría si existe
+            if filters.categoria:
+                productos_ids = await cls.get_filtered_product_ids(filters.categoria)
+                if not productos_ids:
+                    return []  
+                query = query.in_("id", productos_ids)
 
-def count_productos():
-    try:
-        count_result = supabase_manager.client.from_("productos").select("id", count="exact").execute()  # Contar todos los productos
-        return count_result.count  # Regresar el total de productos
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+            # Aplicar filtros adicionales (precio, estado, etc.)
+            query = filters.apply_filters(query)
+
+            # Aplicar rango
+            query = query.range(offset, offset + limit - 1)
+
+            # Ejecutar consulta principal de productos
+            result = query.execute()
+            productos = result.data if result.data else []
+
+            if productos:
+                productos_ids = [p["id"] for p in productos]
+
+                # Obtener imágenes y categorías en paralelo
+                imagenes_query = supabase_manager.client.from_("productos_imagenes")\
+                    .select("id_producto, url")\
+                    .in_("id_producto", productos_ids)\
+                    .eq("orden", 0)  # Solo la primera imagen
+
+                categorias_query = supabase_manager.client.from_("productos_categorias")\
+                    .select("id_producto, categorias!inner(nombre)")\
+                    .in_("id_producto", productos_ids)
+
+                # Ejecutar ambas consultas en paralelo
+                imagenes_result = imagenes_query.execute()
+                categorias_result = categorias_query.execute()
+
+                # Mapear imágenes y categorías por id_producto
+                imagenes_map = {img["id_producto"]: img["url"] for img in imagenes_result.data}
+                categorias_map = {cat["id_producto"]: cat["categorias"]["nombre"] for cat in categorias_result.data}
+
+                # Agregar la imagen y la categoría al producto correspondiente
+                for producto in productos:
+                    producto["imagen_url"] = imagenes_map.get(producto["id"])
+                    producto["categoria"] = categorias_map.get(producto["id"])
+
+                # Limpiar los productos para que solo contengan los campos deseados
+                productos = [
+                    {
+                        "id": producto["id"],
+                        "nombre": producto["nombre"],
+                        "precio": producto["precio"],
+                        "categoria": producto["categoria"],
+                        "estado_producto": producto["estado_producto"],
+                        "imagen_url": producto.get("imagen_url")
+                    }
+                    for producto in productos
+                ]
+
+            return productos
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @classmethod
+    async def count_productos(cls, filters: ProductFilter) -> int:
+        """Cuenta el total de productos con filtros aplicados"""
+        try:
+            # Crear consulta base
+            query = supabase_manager.client.from_("productos")\
+                .select("*", count="exact")
+
+            # Aplicar filtro por categoría si existe
+            if filters.categoria:
+                productos_ids = await cls.get_filtered_product_ids(filters.categoria)
+                if not productos_ids:
+                    return 0
+                query = query.in_("id", productos_ids)
+
+            # Aplicar filtros adicionales
+            query = filters.apply_filters(query)
+
+            result = query.execute()
+            return result.count
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
 # # * Crear un producto
 # def create_producto(producto: ProductosCreate):

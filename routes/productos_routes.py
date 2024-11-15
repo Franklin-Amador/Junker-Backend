@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Query	
-from controllers.productos_controller import get_productos, create_producto, update_producto, delete_producto, get_UnProducto, count_productos
+from fastapi import APIRouter, Query, HTTPException	
+from controllers.productos_controller import create_producto, update_producto, delete_producto, get_UnProducto, ProductFilter, ProductQuery
 from models.productos import ProductosCreate, ProductosUpdate, ProductosDelete
 from typing import Optional
 
@@ -7,14 +7,39 @@ from typing import Optional
 
 router = APIRouter()
 
-# * Endpoint de get paginado con filtro de categoría v1
+# * Endpoint de get paginado con filtro de categoría v7
 @router.get("/productos")
-async def obtener_productos(page: int = 1, limit: int = 16, categoria: str = None):
-    offset = (page - 1) * limit  # Calcular el desplazamiento
-    productos = get_productos(offset, limit, categoria)  # Pasar categoria
-    total = count_productos()  # Contar el total de productos
-    return {"items": productos, "total": total}
-
+async def obtener_productos(
+    page: int = 1,
+    limit: int = 16,
+    categoria: Optional[str] = None,
+    precio_min: Optional[int] = None,
+    precio_max: Optional[int] = None,
+    estado: Optional[str] = None
+):
+    try:
+        offset = (page - 1) * limit
+        filters = ProductFilter(categoria, precio_min, precio_max, estado)
+        
+        # Obtener productos y total en paralelo
+        productos = await ProductQuery.get_productos(offset, limit, filters)
+        total = await ProductQuery.count_productos(filters)
+        
+        return {
+            "items": productos,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "total_pages": -(-total // limit),  # Redondeo hacia arriba
+            "filters_applied": {
+                "categoria": categoria,
+                "precio_min": precio_min,
+                "precio_max": precio_max,
+                "estado": estado
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/productos/{product_id}")

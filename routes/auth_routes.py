@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Response, status
 from db.supabase import supabase_manager 
 from models.user import UserCreate, UserLogin, PasswordReset, Logout, NewPasswordRequest
-from controllers.password_controller import PasswordController
 from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import Dict
@@ -18,7 +17,6 @@ class PasswordResetRequest(BaseModel):
   
 
 router = APIRouter()
-password_controller = PasswordController()
 
 @router.post("/register")
 async def register(user: UserCreate):
@@ -38,19 +36,17 @@ async def register(user: UserCreate):
         raise HTTPException(status_code=400, detail=f"Supabase error: {str(e)}")
     
     
-@router.post("/login")
+# @router.post("/login")
 async def login(user: UserLogin):
     try:
         response = supabase_manager.sign_in(user.email, user.password)
-        usuario = response.user.id
         session = response.session
         # data = supabase_manager.get_user_info(usuario)
-        data = supabase_manager.client.rpc('user_info', {'user_id': usuario}).execute()
+    
         return {
             "access_token": session.access_token,
             "refresh_token": session.refresh_token,
-            "user": usuario,
-            "data": data.data
+
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
