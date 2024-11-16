@@ -63,3 +63,10 @@ class UpdateDescripcion(BaseModel):
 class UpdatePassword(BaseModel):
     password: str
     newPassword: str
+    
+class ProductosVendedor(BaseModel):
+    id: str
+    nombre: str
+    descripcion: str
+    precio: str
+    estado: str
