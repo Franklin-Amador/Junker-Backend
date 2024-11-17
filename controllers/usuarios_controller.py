@@ -49,7 +49,7 @@ def obtener_productos(id_vendedor: str):
             supabase_manager
             .client
             .from_("productos")
-            .select("id, nombre, precio, productos_imagenes(url)")
+            .select("id, nombre, productos_imagenes(url)")
             .eq("id_vendedor", id_vendedor)
             .execute()
         )
@@ -59,7 +59,6 @@ def obtener_productos(id_vendedor: str):
                 {
                     "id": producto["id"],
                     "nombre": producto["nombre"],
-                    "precio": producto["precio"],
                     "imagen": producto["productos_imagenes"][0]["url"] if producto.get("productos_imagenes") else None
                 }
                 for producto in response.data
