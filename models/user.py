@@ -5,22 +5,10 @@ from datetime import datetime
 import re
 
 class UserCreate(BaseModel):
-    email: str
-    password: str
+    id: str
     nombre: str
     apellido: str
-    
-    @field_validator('password')
-    def password_length(cls, v):
-        if not re.search("[0-9]", v):
-            raise ValueError('La contraseña debe contener al menos un número')
-        if not re.search("[a-z]", v):
-            raise ValueError('La contraseña debe contener al menos una letra')
-        if not re.search("[A-Z]", v):
-            raise ValueError('La contraseña debe contener al menos una letra mayuscula')
-        if re.search(r'(012|123|234|345|456|567|678|789)', v):
-            raise ValueError('La contraseña no puede contener una secuencia de 3 números consecutivos')
-        return v
+    email: str
     
 class UserLogin(BaseModel):
     email: str
@@ -68,3 +56,17 @@ class UserUpdate(BaseModel):
     
 class UpdateEmail(BaseModel):
     email: str
+    
+class UpdateDescripcion(BaseModel):
+    descripcion: str
+    
+class UpdatePassword(BaseModel):
+    password: str
+    newPassword: str
+    
+class ProductosVendedor(BaseModel):
+    id: str
+    nombre: str
+    descripcion: str
+    precio: str
+    estado: str

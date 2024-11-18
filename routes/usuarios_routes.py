@@ -1,34 +1,23 @@
 from fastapi import APIRouter, Depends
-from controllers.usuarios_controller import actualizar_correo, actualizar_usuario, obtener_usuario, verify_token, AuthController
-from models.user import UserUpdate, UpdateEmail
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from typing import Dict
+from controllers.usuarios_controller import actualizar_usuario, obtener_usuario, actualizar_desc, obtener_productos
+from models.user import UserUpdate, UpdateDescripcion, ProductosVendedor
+from fastapi.security import HTTPBearer
 
 router = APIRouter()
 security = HTTPBearer()
 
-@router.get('/getUser')
-async def get_user(user: dict = Depends(obtener_usuario)):
-    return user
+@router.get('/getUser/{user_id}')
+async def get_user(user_id: str):
+    return obtener_usuario(user_id)
 
 @router.put("/updateUser/{user_id}")
-async def update_user(user_id: str, user_data: UserUpdate, user: dict = Depends(verify_token)):
-    return actualizar_usuario(user_id, user_data, user)
+async def update_user(user_id: str, user_data: UserUpdate):
+    return actualizar_usuario(user_id, user_data)
 
-@router.put("/updateEmail/{user_id}")
-async def update_email(user_id: str, email: UpdateEmail, user: dict = Depends(verify_token)):
-    return actualizar_correo(user_id, email, user)
+@router.put("/updateDescripcion/{user_id}")
+async def update_desc(user_id: str, descripcion: UpdateDescripcion):
+    return actualizar_desc(user_id, descripcion)
 
-@router.get("/verify", response_model=Dict)
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    payload = AuthController.verify_token(credentials)
-    return {
-        "valid": True,
-        "user": payload.get("sub"),
-        "exp": payload.get("exp")
-    }
-    
-@router.post("/auth/refresh")
-async def refresh_access_token(refresh_token: str):
-    tokens = await AuthController.refresh_access_token_logic(refresh_token)
-    return tokens
+@router.get("/getProductosVendedor/{id}")
+async def get_productos(id: str):
+    return obtener_productos(id)
