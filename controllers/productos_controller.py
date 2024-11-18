@@ -15,6 +15,7 @@ def get_UnProducto(product_id: ProductoRead):
 
 # * Ver los productos testeo v1     
 # ! Version test
+
 class ProductQuery:
     """Clase para manejar las consultas de productos"""
     BASE_SELECT = """
@@ -25,15 +26,25 @@ class ProductQuery:
     async def get_filtered_product_ids(categoria: str) -> List[int]:
         """Obtiene los IDs de productos filtrados por categoría"""
         try:
-            # Subconsulta para obtener id_producto usando una relación directa con id_categoria
             subquery = supabase_manager.client.from_("productos_categorias")\
                 .select("id_producto, categorias!inner(nombre)")\
-                .eq("categorias.nombre", categoria)
+                .ilike("categorias.nombre", f"%{categoria}%")
             
             result = subquery.execute()
-
-            # Devolver solo IDs de productos si hay coincidencias
             return [item['id_producto'] for item in result.data] if result.data else []
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @staticmethod
+    async def search_by_estado(search_query: str) -> List[int]:
+        """Busca productos por estado"""
+        try:
+            query = supabase_manager.client.from_("productos")\
+                .select("id")\
+                .ilike("estado_producto", f"%{search_query}%")
+            
+            result = query.execute()
+            return [item['id'] for item in result.data] if result.data else []
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
@@ -42,66 +53,92 @@ class ProductQuery:
         cls,
         offset: int,
         limit: int,
-        filters: ProductFilter
+        filters: ProductFilter,
+        search_query: str = "",
+        sort_asc: Optional[bool] = None,  # Parámetro para el ordenamiento
     ) -> List[Dict[Any, Any]]:
-        """Obtiene productos con filtros aplicados"""
         try:
-            # Crear consulta base en productos (solo los campos necesarios)
+        # * Consulta principal
             query = supabase_manager.client.from_("productos")\
                 .select(cls.BASE_SELECT)
 
-            # Aplicar filtro por categoría si existe
-            if filters.categoria:
+        # Si hay término de búsqueda, aplicar búsqueda
+            if search_query:
+                search_query = search_query.strip()
+            # Obtener IDs de productos que coinciden con la categoría y estado
+                categoria_ids = await cls.get_filtered_product_ids(search_query) if search_query else []
+                estado_ids = await cls.search_by_estado(search_query) if search_query else []
+            
+            # Combinar todos los IDs encontrados y eliminar duplicados
+                all_matching_ids = list(set(categoria_ids + estado_ids))
+            
+            # Construir la consulta para buscar coincidencias
+                if all_matching_ids:
+                    query = query.or_(
+                        f"nombre.ilike.%{search_query}%,id.in.({','.join(map(str, all_matching_ids))})"
+                    )
+                else:
+                    query = query.ilike("nombre", f"%{search_query}%")
+        
+        # Aplicar filtros si no hay búsqueda o además de la búsqueda
+            if filters.categoria and not search_query:
                 productos_ids = await cls.get_filtered_product_ids(filters.categoria)
                 if not productos_ids:
-                    return []  
+                    return []
                 query = query.in_("id", productos_ids)
 
-            # Aplicar filtros adicionales (precio, estado, etc.)
-            query = filters.apply_filters(query)
+        # Aplicar filtros adicionales
+            if filters.precio_min is not None:
+                query = query.gte("precio", filters.precio_min)
+            if filters.precio_max is not None:
+                query = query.lte("precio", filters.precio_max)
+            if filters.estado:
+                query = query.ilike("estado_producto", f"%{filters.estado}%")
 
-            # Aplicar rango
+        # Aplicar ordenamiento si se especifica
+            # Aplicar ordenamiento según el parámetro sort_asc
+            if sort_asc is not None:
+                order_by = "precio" if sort_asc else "precio.desc"
+                query = query.order(order_by)
+
+
+        # Aplicar paginación
             query = query.range(offset, offset + limit - 1)
 
-            # Ejecutar consulta principal de productos
+        # Ejecutar consulta principal
             result = query.execute()
             productos = result.data if result.data else []
 
+        # Obtener imágenes y categorías en paralelo si hay productos
             if productos:
                 productos_ids = [p["id"] for p in productos]
 
-                # Obtener imágenes y categorías en paralelo
                 imagenes_query = supabase_manager.client.from_("productos_imagenes")\
                     .select("id_producto, url")\
                     .in_("id_producto", productos_ids)\
-                    .eq("orden", 0)  # Solo la primera imagen
+                    .eq("orden", 0)
 
                 categorias_query = supabase_manager.client.from_("productos_categorias")\
                     .select("id_producto, categorias!inner(nombre)")\
                     .in_("id_producto", productos_ids)
 
-                # Ejecutar ambas consultas en paralelo
+            # Ejecutar consultas en paralelo
                 imagenes_result = imagenes_query.execute()
                 categorias_result = categorias_query.execute()
 
-                # Mapear imágenes y categorías por id_producto
+            # Mapear resultados
                 imagenes_map = {img["id_producto"]: img["url"] for img in imagenes_result.data}
                 categorias_map = {cat["id_producto"]: cat["categorias"]["nombre"] for cat in categorias_result.data}
 
-                # Agregar la imagen y la categoría al producto correspondiente
-                for producto in productos:
-                    producto["imagen_url"] = imagenes_map.get(producto["id"])
-                    producto["categoria"] = categorias_map.get(producto["id"])
-
-                # Limpiar los productos para que solo contengan los campos deseados
+            # Construir respuesta final
                 productos = [
                     {
                         "id": producto["id"],
                         "nombre": producto["nombre"],
                         "precio": producto["precio"],
-                        "categoria": producto["categoria"],
+                        "categoria": categorias_map.get(producto["id"]),
                         "estado_producto": producto["estado_producto"],
-                        "imagen_url": producto.get("imagen_url")
+                        "imagen_url": imagenes_map.get(producto["id"])
                     }
                     for producto in productos
                 ]
@@ -110,28 +147,51 @@ class ProductQuery:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
+
     @classmethod
-    async def count_productos(cls, filters: ProductFilter) -> int:
-        """Cuenta el total de productos con filtros aplicados"""
+    async def count_productos(cls, filters: ProductFilter, search_query: str = "") -> int:
+        """Cuenta el total de productos con filtros y búsqueda aplicados"""
         try:
-            # Crear consulta base
             query = supabase_manager.client.from_("productos")\
                 .select("*", count="exact")
 
-            # Aplicar filtro por categoría si existe
-            if filters.categoria:
+            # Si hay término de búsqueda, aplicar la misma lógica que en get_productos
+            if search_query:
+                search_query = search_query.strip()
+                categoria_ids = await cls.get_filtered_product_ids(search_query)
+                estado_ids = await cls.search_by_estado(search_query)
+                
+                all_matching_ids = list(set(categoria_ids + estado_ids))
+                
+                if all_matching_ids:
+                    query = query.or_(
+                        f"nombre.ilike.%{search_query}%,id.in.({','.join(map(str, all_matching_ids))})"
+                    )
+                else:
+                    query = query.ilike("nombre", f"%{search_query}%")
+            
+            # Aplicar filtros si no hay búsqueda o además de la búsqueda
+            if filters.categoria and not search_query:
                 productos_ids = await cls.get_filtered_product_ids(filters.categoria)
                 if not productos_ids:
                     return 0
                 query = query.in_("id", productos_ids)
 
             # Aplicar filtros adicionales
-            query = filters.apply_filters(query)
+            if filters.precio_min is not None:
+                query = query.gte("precio", filters.precio_min)
+            if filters.precio_max is not None:
+                query = query.lte("precio", filters.precio_max)
+            if filters.estado:
+                query = query.ilike("estado_producto", f"%{filters.estado}%")
 
             result = query.execute()
-            return result.count
+            return result.count if result.count is not None else 0
+            
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
+
+
 
 # # * Crear un producto
 # def create_producto(producto: ProductosCreate):
