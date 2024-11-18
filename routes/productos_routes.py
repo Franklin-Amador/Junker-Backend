@@ -15,32 +15,49 @@ async def obtener_productos(
     categoria: Optional[str] = None,
     precio_min: Optional[int] = None,
     precio_max: Optional[int] = None,
-    estado: Optional[str] = None
+    estado: Optional[str] = None,
+    search_query: Optional[str] = "",
+    sort_asc: Optional[bool] = None  # Parámetro opcional para el orden
 ):
+    """
+    Endpoint para obtener productos con filtros, búsqueda y ordenamiento opcional.
+    """
     try:
+        # Normalizar valores de precio si no se especifican
+        if precio_max == 0:
+            precio_min = None
+            precio_max = None
+        
         offset = (page - 1) * limit
         filters = ProductFilter(categoria, precio_min, precio_max, estado)
         
-        # Obtener productos y total en paralelo
-        productos = await ProductQuery.get_productos(offset, limit, filters)
-        total = await ProductQuery.count_productos(filters)
+        # Obtener productos y total en paralelo, pasando search_query y sort_asc
+        productos = await ProductQuery.get_productos(
+            offset=offset,
+            limit=limit,
+            filters=filters,
+            search_query=search_query,
+            sort_asc=sort_asc  # Pasar el orden al método
+        )
+        total = await ProductQuery.count_productos(filters, search_query)
         
         return {
             "items": productos,
             "total": total,
             "page": page,
             "limit": limit,
-            "total_pages": -(-total // limit),  # Redondeo hacia arriba
+            "total_pages": -(-total // limit),  # Cálculo del total de páginas
             "filters_applied": {
                 "categoria": categoria,
                 "precio_min": precio_min,
                 "precio_max": precio_max,
-                "estado": estado
+                "estado": estado,
+                "search_query": search_query,
+                "sort_asc": sort_asc
             }
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.get("/productos/{product_id}")
 async def obtener_producto(product_id: str):
