@@ -1,24 +1,27 @@
 from fastapi import HTTPException
 from db.supabase import supabase_manager 
-from models.carrito import CarritoCreate, CarritoUpdate, CarritoDelete, CarritoRead
+from models.carrito import CarritoCreate, CarritoUpdate, CarritoDelete, CarritoRead, ProductoId
 
 # * Ver un producto en el carrito
-def get_Uncarrito(carrito_id: CarritoRead):
+def get_Uncarrito(carrito_id: CarritoRead, producto_id: ProductoId):
+
     try:
         carrito = supabase_manager.client.from_("carrito_productos").select(
-            "*"
-            ).eq("id", carrito_id).single().execute()
-        return carrito.data
-    except Exception as e:
-
-        raise HTTPException(status_code=400, detail=str(e))
+            "cantidad"
+            ).eq("id_carrito", carrito_id)\
+            .eq("id_producto", producto_id)\
+            .single()\
+            .execute()
+        return carrito.data.get("cantidad", 0) if carrito.data else 0
+    except Exception:
+        return 0
 
 # * Ver todos los articulos en el carrito
-def get_carrito():
+def get_carrito(carrito_id: CarritoRead):
     try:
         carritos = supabase_manager.client.from_("carrito_productos").select(
             "*, carrito(id_usuario), productos(*, productos_imagenes(url, orden), vendedores(calificacion, usuarios(nombre, apellido)))"
-            ).execute()
+            ).eq("id_carrito", carrito_id).execute()
         return carritos.data
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
