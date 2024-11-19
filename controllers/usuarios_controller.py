@@ -42,15 +42,17 @@ def actualizar_desc(user_id: str, descripcion: UpdateDescripcion):
     except Exception as e:
         return {"success": False, "message": str(e)}
     
-def obtener_productos(id_vendedor: str):
+def obtener_productos(id_vendedor: str, limit: int, offset: int):
     try:
-        # Realiza la consulta con LEFT JOIN usando la relación de tablas
         response = (
             supabase_manager
             .client
             .from_("productos")
             .select("id, nombre, productos_imagenes(url)")
             .eq("id_vendedor", id_vendedor)
+            .limit(limit)
+            .offset(offset)
+            .order('fecha_publicacion', desc=True)
             .execute()
         )
         
@@ -68,5 +70,4 @@ def obtener_productos(id_vendedor: str):
             raise HTTPException(status_code=404, detail="No se encontraron productos para este vendedor")
         
     except Exception as e:
-        # Maneja errores inesperados
         raise HTTPException(status_code=500, detail="No se pudieron obtener los productos")

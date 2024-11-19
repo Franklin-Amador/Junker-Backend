@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from controllers.usuarios_controller import actualizar_usuario, obtener_usuario, actualizar_desc, obtener_productos
 from models.user import UserUpdate, UpdateDescripcion, ProductosVendedor
 from fastapi.security import HTTPBearer
@@ -19,5 +19,5 @@ async def update_desc(user_id: str, descripcion: UpdateDescripcion):
     return actualizar_desc(user_id, descripcion)
 
 @router.get("/getProductosVendedor/{id}")
-async def get_productos(id: str):
-    return obtener_productos(id)
+async def get_productos(id: str, limit: int = Query(5), offset: int = Query(0)):
+    return obtener_productos(id_vendedor=id, limit=limit, offset=offset)
