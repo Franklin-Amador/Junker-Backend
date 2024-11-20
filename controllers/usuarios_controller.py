@@ -67,7 +67,8 @@ def obtener_productos(id_vendedor: str, limit: int, offset: int):
             ]
             return productos
         else:
-            raise HTTPException(status_code=404, detail="No se encontraron productos para este vendedor")
+            # Retorna una lista vacía si no hay datos
+            return []
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail="No se pudieron obtener los productos")
+        raise HTTPException(status_code=500, detail=f"Error al obtener productos: {str(e)}")
