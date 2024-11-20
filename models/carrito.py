@@ -17,3 +17,6 @@ class CarritoDelete(BaseModel):
 
 class CarritoRead(BaseModel):
     id: str
+    
+class ProductoId(BaseModel):
+    id: str    

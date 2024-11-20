@@ -5,14 +5,14 @@ from models.carrito import CarritoCreate, CarritoUpdate, CarritoDelete
 
 router = APIRouter()
 
-@router.get("/carrito")
-async def obtener_carrito(): 
-    carritos = get_carrito()  
+@router.get("/carrito/{carrito_id}")
+async def obtener_carrito(carrito_id: str): 
+    carritos = get_carrito(carrito_id)  
     return  carritos
 
-@router.get("/carrito/{carrito_id}")
-async def obtener_carrito(carrito_id: str):
-    return get_Uncarrito(carrito_id)
+@router.get("/carrito/{carrito_id}, {producto_id},")
+async def obtener_carrito(carrito_id: str, producto_id: str):
+    return get_Uncarrito(carrito_id, producto_id)
 
      
 @router.post("/carrito")
