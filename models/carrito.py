@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from typing import List
 
 class CarritoCreate(BaseModel):
     id_producto: str
@@ -13,7 +12,8 @@ class CarritoUpdate(BaseModel):
     cantidad:int = Field(..., gt=0, description="La cantidad debe ser mayor a cero")  
     
 class CarritoDelete(BaseModel):
-    id: str
+    id_carrito: str
+    id_producto: str
 
 class CarritoRead(BaseModel):
     id: str
