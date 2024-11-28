@@ -50,12 +50,13 @@ def create_carrito(carrito: CarritoCreate):
 def update_carrito(carrito: CarritoUpdate):
     try:
         data = {
-            "id_carrito": carrito.id_carrito,
-            "id_producto": carrito.id_producto,
             "cantidad": carrito.cantidad,
         }
         
-        carrito_update = supabase_manager.client.from_("carrito_productos").update(data).eq("id",carrito.id).execute()
+        carrito_update = supabase_manager.client.from_("carrito_productos").update(data)\
+            .eq("id_carrito", carrito.id_carrito) \
+            .eq("id_producto", carrito.id_producto) \
+            .execute()
        
         if not carrito_update.data:
             raise HTTPException(status_code=400, detail="Error al actualizar la imagen del carrito")

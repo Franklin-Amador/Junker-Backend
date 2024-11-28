@@ -6,7 +6,6 @@ class CarritoCreate(BaseModel):
     cantidad:int = Field(..., gt=0, description="La cantidad debe ser mayor a cero")  
     
 class CarritoUpdate(BaseModel):
-    id:str
     id_producto: str
     id_carrito: str
     cantidad:int = Field(..., gt=0, description="La cantidad debe ser mayor a cero")  

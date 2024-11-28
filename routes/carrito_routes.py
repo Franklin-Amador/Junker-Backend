@@ -19,7 +19,7 @@ async def obtener_carrito(carrito_id: str, producto_id: str):
 async def post_carritos(carrito: CarritoCreate):
     return create_carrito(carrito)
 
-@router.put("/carrito")
+@router.put("/carrito/cantidad")
 async def put_carrito(carrito: CarritoUpdate):
     return update_carrito(carrito)
 
