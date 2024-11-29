@@ -19,12 +19,12 @@ async def obtener_carrito(carrito_id: str, producto_id: str):
 async def post_carritos(carrito: CarritoCreate):
     return create_carrito(carrito)
 
-@router.put("/carrito")
+@router.put("/carrito/cantidad")
 async def put_carrito(carrito: CarritoUpdate):
     return update_carrito(carrito)
 
-@router.delete("/carrito")
-async def borrar_carrito(carrito: CarritoDelete):
-    return delete_carrito(carrito)
+@router.delete("/carrito/{carrito_id}/producto/{producto_id}")
+async def borrar_carrito(carrito_id: str, producto_id: str):
+    return delete_carrito(carrito_id, producto_id)
     
     
