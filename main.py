@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+import time
 
 from routes import usuarios_routes, auth_routes, categories_routes, productos_routes, carrito_routes, favoritos_routes
 from models.user import MailSend, UserCreate, UserLogin
@@ -7,6 +9,9 @@ from models.user import MailSend, UserCreate, UserLogin
 from routes.auth_routes import register, login
 
 app = FastAPI()
+
+# * variable de ejecución
+last_execution_time = 0
 
 # * para permitir cualquier origen 
 app.add_middleware(
@@ -40,4 +45,17 @@ async def registro(user: UserCreate):
 async def loginn(user: UserLogin):
     response = await login(user)
     return response
+
+async def keep_alive_task():
+    global last_execution_time
+    while True:
+        current_time = time.time()        
+        print(f"Manteniendo el servicio activo - Timestamp: {current_time}")
+        await asyncio.sleep(60)
+        
+        
+@app.on_event("startup")
+async def startup_event():
+    # Iniciar la tarea en segundo plano cuando el servidor arranca
+    asyncio.create_task(keep_alive_task())
 
