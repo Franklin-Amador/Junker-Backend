@@ -1,7 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import asyncio
-import time
 
 from routes import usuarios_routes, auth_routes, categories_routes, productos_routes, carrito_routes, favoritos_routes
 from models.user import MailSend, UserCreate, UserLogin
@@ -46,16 +44,7 @@ async def loginn(user: UserLogin):
     response = await login(user)
     return response
 
-async def keep_alive_task():
-    global last_execution_time
-    while True:
-        current_time = time.time()        
-        print(f"Manteniendo el servicio activo - Timestamp: {current_time}")
-        await asyncio.sleep(60)
-        
-        
-@app.on_event("startup")
-async def startup_event():
-    # Iniciar la tarea en segundo plano cuando el servidor arranca
-    asyncio.create_task(keep_alive_task())
-
+@app.get("/keep-alive")
+def keep_alive():
+    print("Servicio activo")
+    return {"message": "Servicio activo"}

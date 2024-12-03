@@ -13,13 +13,13 @@ class ProductosCreate(BaseModel):
     
 class ProductosUpdate(BaseModel):
     id:str
-    nombre: str = Field(..., min_length=1, max_length=70)
-    descripcion: str = Field(..., min_length=1, max_length=1000)
-    precio: float 
-    estado_producto: str = Field(..., min_length=1, max_length=50)
-    stock: int
-    imagen_url: List[str]
-    id_vendedor:str 
+    nombre: Optional[str] = Field(None, min_length=1, max_length=70)
+    descripcion: Optional[str] = Field(None, min_length=1, max_length=1000)
+    precio: Optional[float] = None
+    estado_producto: Optional[str] = Field(None, min_length=1, max_length=50)
+    stock: Optional[int] = None
+    imagen_url: Optional[List[str]] = None
+    id_vendedor: Optional[str] = None
     
 class ProductosDelete(BaseModel):
     id: str

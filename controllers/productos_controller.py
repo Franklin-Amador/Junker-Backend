@@ -239,7 +239,8 @@ def create_producto(producto: ProductosCreate):
             "precio": producto.precio,
             "estado_producto": producto.estado_producto,
             "id_vendedor": producto.id_vendedor,
-            "stock": producto.stock,       
+            "stock": producto.stock,   
+                
         }
         
         producto_res = supabase_manager.client.from_("productos").insert(data_producto).execute() 
@@ -284,31 +285,41 @@ def create_producto(producto: ProductosCreate):
 # * Actualizar productos
 def update_producto(producto: ProductosUpdate):
     try:
+        # Actualiza los datos del producto
         data = {
             "nombre": producto.nombre,
             "descripcion": producto.descripcion,
             "precio": producto.precio,
             "id_vendedor": producto.id_vendedor,
+            "estado_producto": producto.estado_producto,
+            "stock": producto.stock
         }
         
-        producto_update = supabase_manager.client.from_("productos").update(data).eq("id",producto.id).execute()
-       
+        producto_update = supabase_manager.client.from_("productos").update(data).eq("id", producto.id).execute()
+        
+        if not producto_update.data:
+            raise HTTPException(status_code=404, detail="Producto no encontrado")
+        
         producto_id = producto_update.data[0]["id"]
-       
-        imagen_data = {
-        "id_producto": producto_id,
-        "url": producto.imagen_url 
-        }
+
+        # Elimina las imágenes actuales del producto (si es necesario)
+        supabase_manager.client.from_("productos_imagenes").delete().eq("id_producto", producto_id).execute()
+
+        # Inserta las nuevas imágenes
+        imagen_data = [
+            {"id_producto": producto_id, "url": url, "orden": index}
+              for index, url in enumerate(producto.imagen_url)
+        ]
         
         imagen_res = supabase_manager.client.from_("productos_imagenes").insert(imagen_data).execute()
         
         if not imagen_res.data:
-            raise HTTPException(status_code=400, detail="Error al actualizar la imagen del producto")
+            raise HTTPException(status_code=400, detail="Error al actualizar las imágenes del producto")
         
-       
         return {"message": "Producto actualizado correctamente"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
     
 # * Eliminar un producto
 def delete_producto(producto: ProductosDelete):
