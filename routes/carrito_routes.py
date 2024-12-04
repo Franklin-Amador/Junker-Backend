@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from controllers.carrito_controller import get_carrito, create_carrito, update_carrito, delete_carrito, get_Uncarrito
-from models.carrito import CarritoCreate, CarritoUpdate, CarritoDelete
+from models.carrito import CarritoCreate, CarritoUpdate
 # from typing import Optional
 
 router = APIRouter()

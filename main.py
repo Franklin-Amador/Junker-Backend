@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import usuarios_routes, auth_routes, categories_routes, productos_routes, carrito_routes, favoritos_routes
+from routes import usuarios_routes, auth_routes, categories_routes, productos_routes, carrito_routes, favoritos_routes, administrador_routes
 from models.user import MailSend, UserCreate, UserLogin
 
 from routes.auth_routes import register, login
@@ -28,6 +28,7 @@ app.include_router(categories_routes.router, tags=["categories"])
 app.include_router(productos_routes.router, tags=["productos"])
 app.include_router(carrito_routes.router, tags=["carrito"])
 app.include_router(favoritos_routes.router, tags=["favorito"])
+app.include_router(administrador_routes.router, tags=["administrador"])
 
 # * Endpoint registro
 @app.post("/auth/register")
