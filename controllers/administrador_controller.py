@@ -14,15 +14,6 @@ class RolesPermissions(str, Enum):
     
     @classmethod
     def validar_rol(cls, rol: str) -> bool:
-        """
-        Class method to validate if a role is valid.
-        
-        Args:
-            rol (str): Role to validate
-        
-        Returns:
-            bool: True if role is valid, False otherwise
-        """
         return rol in cls._value2member_map_
 
 # Type annotation for easier use
@@ -203,8 +194,6 @@ class UsuarioQuery:
                 # Ejecutar consultas en paralelo
                 roles_result = rol_query.execute()
 
-                # Mapear resultados
-                # roles_map = {rol["id_usuario"]: rol["roles"]["nombre"] for rol in roles_result.data}
 
                 roles_map = {}
                 for rol in roles_result.data:
